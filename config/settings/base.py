@@ -173,8 +173,8 @@ AUTHENTICATION_BACKENDS = [
 
 # AUTH0
 USE_AUTH0 = env.bool("USE_AUTH0", False)
-USE_API_KEY_AUTH = env.bool("ALLOW_API_KEYS", False)
-
+#USE_API_KEY_AUTH = env.bool("ALLOW_API_KEYS", False)
+USE_API_KEY_AUTH = False
 if USE_AUTH0:
 
     AUTH0_CLIENT_ID = env("AUTH0_CLIENT_ID")
@@ -473,8 +473,8 @@ GRAPHENE_MIDDLEWARE = [
 ]
 
 # Add JWT middleware if using Auth0
-if USE_AUTH0:
-    GRAPHENE_MIDDLEWARE.append("graphql_jwt.middleware.JSONWebTokenMiddleware")
+#if USE_AUTH0:
+GRAPHENE_MIDDLEWARE.append("graphql_jwt.middleware.JSONWebTokenMiddleware")
 
 # Add API Key middleware if enabled
 if USE_API_KEY_AUTH:

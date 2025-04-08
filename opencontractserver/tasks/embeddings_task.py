@@ -51,7 +51,7 @@ def calculate_embedding_for_doc_text(
 
     except Exception as e:
         logger.error(
-            f"calculate_embedding_for_doc_text() - failed to generate embeddings due to error: {e}"
+            f"calculate_embedding_for_doc_text() DocID: {doc_id} - failed to generate embeddings due to error: {e}"
         )
         raise
 

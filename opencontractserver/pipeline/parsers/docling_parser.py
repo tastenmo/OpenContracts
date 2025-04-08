@@ -191,7 +191,7 @@ class DoclingParser(BaseParser):
         )
 
         pipeline_options = PdfPipelineOptions(
-            artifacts_path=artifacts_path,
+#            artifacts_path=artifacts_path,
             do_ocr=True,
             do_table_structure=True,
             generate_page_images=True,

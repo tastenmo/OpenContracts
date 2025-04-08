@@ -31,7 +31,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libtesseract-dev \
   git \
   # psycopg2 dependencies
-  libpq-dev
+  libpq-dev \
+  ca-certificates
+
+
+COPY ./certs/escad-root-ca.crt /usr/local/share/ca-certificates/
+
+RUN update-ca-certificates
 
 # Copy the entire requirements directory
 COPY ./requirements ./requirements
@@ -69,9 +75,15 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libsm6 \
   libxext6 \
   tesseract-ocr-eng \
+  ca-certificates \
+
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
+
+COPY ./certs/escad-root-ca.crt /usr/local/share/ca-certificates/
+  
+RUN update-ca-certificates
 
 # All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
 # copy python dependency wheels from python-build-stage
@@ -81,7 +93,7 @@ RUN pip install --upgrade pip
 
 # Install CPU-less requirements
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-RUN pip install sentence-transformers
+#RUN pip install sentence-transformers
 
 # use wheels to install python dependencies
 RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \

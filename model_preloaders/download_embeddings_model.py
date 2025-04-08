@@ -3,17 +3,15 @@ import os
 from sentence_transformers import SentenceTransformer
 
 # Directory to save the model (absolute path)
-cache_dir = "/models"
+#cache_dir = "/models"
 
 # Full path where the model will be saved
-model_save_path = os.path.join(
-    cache_dir, "sentence-transformers", "multi-qa-MiniLM-L6-cos-v1"
-)
+model_save_path = "/models"
 
 # Download and save the sentence transformer model
 model = SentenceTransformer(
-    "multi-qa-MiniLM-L6-cos-v1",
-    cache_folder=cache_dir,
+    "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+#    "all-MiniLM-L6-v2",
 )
 
 # Save the model to the desired path
