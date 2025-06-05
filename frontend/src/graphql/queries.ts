@@ -21,6 +21,9 @@ import {
   ConversationTypeConnection,
   PipelineComponentType,
   ChatMessageType,
+  UserType,
+  RawCorpusType,
+  RawDocumentType,
 } from "../types/graphql-api";
 import { ExportObject } from "../types/graphql-api";
 import { WebSocketSources } from "../components/knowledge_base/document/right_tray/ChatTray";
@@ -1994,7 +1997,33 @@ export const GET_EMBEDDERS = gql`
   }
 `;
 
-// First, we'll define a new combined query that gets everything we need:
+export interface GetDocumentDetailsInput {
+  documentId: string;
+}
+
+export interface GetDocumentDetailsOutput {
+  document: RawDocumentType;
+}
+
+export const GET_DOCUMENT_DETAILS = gql`
+  query GetDocumentDetails($documentId: String!) {
+    document(id: $documentId) {
+      id
+      title
+      fileType
+      creator {
+        email
+      }
+      created
+      mdSummaryFile
+      pdfFile
+      txtExtractFile
+      pawlsParseFile
+      myPermissions
+    }
+  }
+`;
+
 export interface GetDocumentKnowledgeAndAnnotationsInput {
   documentId: string;
   corpusId: string;
@@ -2002,8 +2031,8 @@ export interface GetDocumentKnowledgeAndAnnotationsInput {
 }
 
 export interface GetDocumentKnowledgeAndAnnotationsOutput {
-  document: DocumentType;
-  corpus: CorpusType;
+  document: RawDocumentType;
+  corpus: RawCorpusType;
 }
 
 export const GET_DOCUMENT_KNOWLEDGE_AND_ANNOTATIONS = gql`
@@ -2126,6 +2155,7 @@ export const GET_DOCUMENT_KNOWLEDGE_AND_ANNOTATIONS = gql`
     }
     corpus(id: $corpusId) {
       id
+      myPermissions
       labelSet {
         id
         allAnnotationLabels {
@@ -2372,3 +2402,25 @@ export interface GetCorpusChatMessagesOutputs {
     }>;
   };
 }
+
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      id
+      username
+      # Add any other user fields you need globally
+      isUsageCapped # Crucially, fetch this field
+      # email
+      # firstName
+      # lastName
+    }
+  }
+`;
+
+// Define interfaces for the query output
+export interface GetMeOutputs {
+  me: UserType | null; // It can be null if not logged in
+}
+
+// No inputs needed for this query
+export interface GetMeInputs {}

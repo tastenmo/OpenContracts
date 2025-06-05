@@ -140,6 +140,8 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
   onDelete,
   onSelect,
 }) => {
+  console.log(JSON.stringify(annotation, null, 2));
+
   const { selectedAnnotations, handleAnnotationSelect } =
     useAnnotationSelection();
   const { annotationElementRefs } = useAnnotationRefs();
@@ -156,6 +158,7 @@ export const HighlightItem: React.FC<HighlightItemProps> = ({
       color={annotation?.annotationLabel?.color}
       selected={selected}
       className={`sidebar__annotation ${className || ""}`}
+      data-annotation-id={annotation.id}
       onClick={() => {
         annotationElementRefs.current[annotation.id]?.scrollIntoView({
           behavior: "smooth",

@@ -86,16 +86,17 @@ import {
 } from "./context/UISettingsAtom";
 import styled from "styled-components";
 import { DocumentViewer } from "./display/viewer/DocumentViewer";
+import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
 
 // Loading pdf js libraries without cdn is a right PITA... cobbled together a working
 // approach via these guides:
 // https://stackoverflow.com/questions/63553008/looking-for-help-to-make-npm-pdfjs-dist-work-with-webpack-and-django
 // https://github.com/mozilla/pdf.js/issues/12379
 // https://github.com/mozilla/pdf.js/blob/f40bbe838e3c09b84e6f69df667a453c55de25f8/examples/webpack/main.js
-const pdfjsLib = require("pdfjs-dist");
 
 // Setting worker path to worker bundle.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
+GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.js`;
+
 /**
  * Props for the DocumentAnnotator component.
  */
@@ -217,10 +218,10 @@ export const DocumentAnnotator = ({
       const corpus_permissions = getPermissions(opened_corpus.myPermissions);
       setCorpus({
         selectedCorpus: opened_corpus,
-        permissions: corpus_permissions,
+        myPermissions: corpus_permissions,
       });
     }
-  }, [opened_document, opened_corpus]);
+  }, [opened_document, opened_corpus, setSelectedDocument, setCorpus]);
 
   // Process annotations when data is loaded
   useEffect(() => {
@@ -281,7 +282,7 @@ export const DocumentAnnotator = ({
         opened_document.pdfFile
       ) {
         console.debug("React to PDF doc load request");
-        const loadingTask: PDFDocumentLoadingTask = pdfjsLib.getDocument(
+        const loadingTask: PDFDocumentLoadingTask = getDocument(
           opened_document.pdfFile
         );
         loadingTask.onProgress = (p: { loaded: number; total: number }) => {

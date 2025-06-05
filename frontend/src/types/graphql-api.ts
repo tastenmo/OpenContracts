@@ -63,7 +63,7 @@ export type AnnotationLabelType = Node & {
   text?: Scalars["String"];
   creator?: UserType;
   needed_by_analyzer_id?: Scalars["String"];
-  used_by_analyses: AnalysisTypeConnection;
+  used_by_analyses?: AnalysisTypeConnection;
   created?: Scalars["DateTime"];
   modified?: Scalars["DateTime"];
   isPublic?: Scalars["Boolean"];
@@ -111,31 +111,55 @@ export type AnnotationLabelTypeEdge = {
   cursor: Scalars["String"];
 };
 
-export type ServerAnnotationType = Node & {
+/* -------------------------------------------------
+ *  Annotation types – raw vs typed
+ * ------------------------------------------------- */
+
+/**
+ * GraphQL returns `myPermissions` as an array of raw strings.
+ * We keep that shape in `RawServerAnnotationType` and convert
+ * to the typed enum in `ServerAnnotationType`, just like we do
+ * for documents (`RawDocumentType` ⇢ `DocumentType`).
+ */
+export type RawServerAnnotationType = Node & {
   __typename?: "AnnotationType";
   id: Scalars["ID"];
-  parent?: Maybe<ServerAnnotationType>;
+  parent?: Maybe<ServerAnnotationType>; // keep typed reference
   page: Scalars["Int"];
   annotationType?: LabelType;
   userFeedback?: FeedbackTypeConnection;
-  created_by_analyses: AnalysisTypeConnection;
+  created_by_analyses?: AnalysisTypeConnection;
   rawText?: Maybe<Scalars["String"]>;
   json?: MultipageAnnotationJson | SpanAnnotationJson;
   annotationLabel: AnnotationLabelType;
-  document: DocumentType;
+  document?: DocumentType;
   structural?: boolean;
   corpus?: Maybe<CorpusType>;
-  creator: UserType;
-  created: Scalars["DateTime"];
-  modified: Scalars["DateTime"];
+  creator?: UserType;
+  created?: Scalars["DateTime"];
+  modified?: Scalars["DateTime"];
   isPublic?: Scalars["Boolean"];
-  myPermissions?: PermissionTypes[];
+
+  /** Raw permission strings straight from the API */
+  myPermissions?: string[];
+
   analysis?: Maybe<AnalysisType>;
-  assignmentSet: AssignmentTypeConnection;
-  sourceNodeInRelationships: RelationshipTypeConnection;
-  targetNodeInRelationships: RelationshipTypeConnection;
-  chatMessages: ChatMessageTypeConnection;
-  createdByChatMessage: ChatMessageTypeConnection;
+  assignmentSet?: AssignmentTypeConnection;
+  sourceNodeInRelationships?: RelationshipTypeConnection;
+  targetNodeInRelationships?: RelationshipTypeConnection;
+  chatMessages?: ChatMessageTypeConnection;
+  createdByChatMessage?: ChatMessageTypeConnection;
+};
+
+/**
+ * Application-level annotation object with enum-based permissions.
+ */
+export type ServerAnnotationType = Omit<
+  RawServerAnnotationType,
+  "myPermissions"
+> & {
+  /** Type-safe permissions list */
+  myPermissions?: PermissionTypes[];
 };
 
 export type AnnotationTypeAssignmentSetArgs = {
@@ -222,7 +246,7 @@ export type AssignmentTypeEdge = {
   cursor: Scalars["String"];
 };
 
-export type CorpusType = Node & {
+export type RawCorpusType = Node & {
   __typename?: "CorpusType";
   id: Scalars["ID"];
   title?: Scalars["String"];
@@ -248,8 +272,12 @@ export type CorpusType = Node & {
   allAnnotationSummaries?: ServerAnnotationType[];
   analyses: AnalysisTypeConnection;
   isPublic?: Scalars["Boolean"];
-  myPermissions?: PermissionTypes[];
+  myPermissions?: string[];
   conversations?: ConversationTypeConnection;
+};
+
+export type CorpusType = Omit<RawCorpusType, "myPermissions"> & {
+  myPermissions?: PermissionTypes[];
 };
 
 export type CorpusTypeDocumentsArgs = {
@@ -293,11 +321,11 @@ export type CorpusTypeConnection = {
 
 export type CorpusTypeEdge = {
   __typename?: "CorpusTypeEdge";
-  node?: Maybe<CorpusType>;
+  node?: Maybe<RawCorpusType>;
   cursor: Scalars["String"];
 };
 
-export type DocumentType = Node & {
+export type RawDocumentType = Node & {
   __typename?: "DocumentType";
   id: Scalars["ID"];
   title?: Maybe<Scalars["String"]>;
@@ -321,16 +349,20 @@ export type DocumentType = Node & {
   corpusSet?: CorpusTypeConnection;
   annotationSet?: AnnotationTypeConnection;
   isPublic?: Scalars["Boolean"];
-  myPermissions?: PermissionTypes[];
-  allAnnotations?: ServerAnnotationType[];
+  myPermissions?: string[];
+  allAnnotations?: RawServerAnnotationType[];
   allRelationships?: RelationshipType[];
   allDocRelationships?: DocumentRelationshipType[];
-  allStructuralAnnotations?: ServerAnnotationType[];
+  allStructuralAnnotations?: RawServerAnnotationType[];
   docLabelAnnotations?: Maybe<AnnotationTypeConnection>;
   metadataAnnotations?: Maybe<AnnotationTypeConnection>;
   conversations?: ConversationTypeConnection;
   chatMessages?: ChatMessageTypeConnection;
   allNotes?: NoteType[];
+};
+
+export type DocumentType = Omit<RawDocumentType, "myPermissions"> & {
+  myPermissions?: PermissionTypes[];
 };
 
 export type DocumentTypeAssignmentSetArgs = {
@@ -824,6 +856,7 @@ export type UserType = Node & {
   id?: Scalars["ID"];
   password?: Scalars["String"];
   lastLogin?: Maybe<Scalars["DateTime"]>;
+  isUsageCapped?: Scalars["Boolean"];
   isSuperuser?: Scalars["Boolean"];
   username?: Scalars["String"];
   email: Scalars["String"];

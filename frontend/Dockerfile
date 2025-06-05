@@ -1,5 +1,5 @@
 # => Build Container
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 
 WORKDIR /app
 COPY package.json .
@@ -9,7 +9,7 @@ COPY . .
 RUN yarn build
 
 # => Run container
-FROM nginx:1.27.4-alpine
+FROM nginx:1.27.5-alpine
 
 LABEL version="1.0"
 LABEL description="Base docker image for Open Contracts GUI"
@@ -20,7 +20,7 @@ RUN rm -rf /etc/nginx/conf.d
 COPY conf /etc/nginx
 
 # Static build
-COPY --from=builder /app/build /usr/share/nginx/html/
+COPY --from=builder /app/dist /usr/share/nginx/html/
 
 # Default Port for HTTP
 EXPOSE 3000

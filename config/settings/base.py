@@ -35,6 +35,9 @@ USE_AWS = env.bool("USE_AWS", False)
 USE_ANALYZER = env.bool("USE_ANALYZER", False)
 CALLBACK_ROOT_URL_FOR_ANALYZER = env.str("CALLBACK_ROOT_URL_FOR_ANALYZER", None)
 
+# Allow Graphene Django Debug Toolbar middleware
+ALLOW_GRAPHQL_DEBUG = env.bool("ALLOW_GRAPHQL_DEBUG", default=True)
+
 # Set max file upload size to 5 GB for large corpuses
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880000
 # Local time zone. Choices are
@@ -157,8 +160,8 @@ USAGE_CAPPED_USER_CAN_EXPORT_CORPUS = env.bool(
 ALLOWED_DOCUMENT_MIMETYPES = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    # "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "text/plain",
     "application/txt",
 ]
@@ -482,10 +485,15 @@ if USE_API_KEY_AUTH:
         "config.graphql_api_token_auth.middleware.ApiKeyTokenMiddleware"
     )
 
+# Add Django Debug Middleware if enabled
+if ALLOW_GRAPHQL_DEBUG:
+    GRAPHENE_MIDDLEWARE.append("graphene_django.debug.DjangoDebugMiddleware")
+
 # Configure Graphene with the constructed middleware list
 GRAPHENE = {
     "SCHEMA": "config.graphql.schema.schema",
     "MIDDLEWARE": GRAPHENE_MIDDLEWARE,
+    "RELAY_CONNECTION_MAX_LIMIT": 10,
 }
 
 GRAPHQL_JWT = {
@@ -509,6 +517,8 @@ VECTOR_EMBEDDER_API_KEY = "abc123"
 OPENAI_API_KEY = env.str("OPENAI_API_KEY", default="")
 OPENAI_MODEL = env.str("OPENAI_MODEL", default="gpt-4o")
 EMBEDDINGS_MODEL = env.str("EMBEDDINGS_MODEL", default="gpt-4o")
+HF_TOKEN = env.str("HF_TOKEN", default="")
+HF_EMBEDDINGS_ENDPOINT = env.str("HF_EMBEDDINGS_ENDPOINT", default="")
 
 # CORS
 # ------------------------------------------------------------------------------
@@ -545,12 +555,12 @@ SENTENCE_TRANSFORMER_MODELS_PATH = env.str(
 
 # Preferred parsers for each MIME type
 PREFERRED_PARSERS = {
-    "application/pdf": "opencontractserver.pipeline.parsers.docling_parser.DoclingParser",
+    "application/pdf": "opencontractserver.pipeline.parsers.docling_parser_rest.DoclingParser",
     "text/plain": "opencontractserver.pipeline.parsers.oc_text_parser.TxtParser",
     "application/txt": "opencontractserver.pipeline.parsers.oc_text_parser.TxtParser",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "opencontractserver.pipeline.parsers.docling_parser.DoclingParser",  # noqa
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "opencontractserver.pipeline.parsers.docling_parser.DoclingParser",  # noqa
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "opencontractserver.pipeline.parsers.docling_parser.DoclingParser",  # noqa
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "opencontractserver.pipeline.parsers.docling_parser_rest.DoclingParser",  # noqa
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "opencontractserver.pipeline.parsers.docling_parser_rest.DoclingParser",  # noqa
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "opencontractserver.pipeline.parsers.docling_parser_rest.DoclingParser",  # noqa
 }
 
 # Thumbnail extraction tasks
@@ -633,4 +643,16 @@ MINN_MODERNBERT_EMBEDDERS = {
     "text/plain": "opencontractserver.pipeline.embedders.minn_modern_bert_embedder.MinnModernBERTEmbedder768",
     "text/html": "opencontractserver.pipeline.embedders.minn_modern_bert_embedder.MinnModernBERTEmbedder768",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "opencontractserver.pipeline.embedders.minn_modern_bert_embedder.MinnModernBERTEmbedder768",  # noqa
+}
+
+
+PIPELINE_SETTINGS = {
+    "opencontractserver.pipeline.embedders.sent_transformer_microservice.MicroserviceEmbedder": {
+        "embeddings_microservice_url": "http://vector-embedder:8000",
+        "vector_embedder_api_key": "abc123",
+    },
+    "opencontractserver.pipeline.parsers.docling_parser_rest.DoclingParser": {
+        "DOCLING_PARSER_SERVICE_URL": "http://docling-parser:8000",
+        "DOCLING_PARSER_TIMEOUT": None,
+    },
 }
